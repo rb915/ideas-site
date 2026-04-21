@@ -586,6 +586,16 @@ def main():
 
     out_dir = Path("public")
     out_dir.mkdir(exist_ok=True)
+    import shutil
+    for asset in ["icon-512.png", "icon-192.png", "apple-touch-icon.png",
+                  "favicon-32.png", "manifest.json"]:
+        src = Path(asset)
+        if src.exists():
+            shutil.copy(src, out_dir / asset)
+            print(f"  copied {asset}")
+        else:
+            print(f"  (skipped {asset} — not found)")
+    
     (out_dir / "index.html").write_text(page, encoding="utf-8")
     print(f"\n✓ Wrote public/index.html — {total} ideas, {section_num} themes")
 
