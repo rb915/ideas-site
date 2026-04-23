@@ -569,8 +569,73 @@ def main():
       </details>
     </article>''')
         section_html_parts.append("  </div>\n</details>")
+# ---- Format Segments (static, hard-coded) ----
+    FORMAT_SEGMENTS = [
+        {
+            "name": '"How we actually did it" reels',
+            "summary": "Walk through real True Classic decisions with specifics.",
+            "body": 'Walk through real True Classic decisions. "We spent $3K on our first Facebook ad and here\'s what happened." Specifics beat generalities every time.',
+        },
+        {
+            "name": "Myth-busting format",
+            "summary": "Short, punchy, contrarian takes that position the school.",
+            "body": '"Everyone says you need VC funding to scale. We did $270M with zero." Short, punchy, contrarian. Sets up the school as the alternative path.',
+        },
+        {
+            "name": "Behind the negotiation",
+            "summary": "Show the frameworks behind $40–50M/yr in savings.",
+            "body": 'You save $40–50M/yr negotiating. Show the frameworks. "Here\'s how I got our shipping costs cut 30%." This is curriculum preview content.',
+        },
+        {
+            "name": "Student zero content",
+            "summary": "Document mentoring someone launching a DTC brand, in real time.",
+            "body": "Start documenting someone you're mentoring through launching a DTC brand. Real time. This becomes the proof of concept for the school before it even launches.",
+        },
+        {
+            "name": '"What I\'d do with $5K today" series',
+            "summary": "A step-by-step launch walkthrough — this IS the school funnel.",
+            "body": "You started with $3K. Walk people through exactly how you'd launch a brand today step by step. Dropshipping first, validate on Amazon, then build the brand. This IS the school funnel.",
+        },
+        {
+            "name": "Origin story series",
+            "summary": "Break the whole origin story into chaptered reels.",
+            "body": "Your origin story reel crushed. But you told the whole thing in one video. Break it into chapters. Poker days. Music failure. The $3K bet. Each one is a hook.",
+        },
+        {
+            "name": "Roast format",
+            "summary": "Break down bad DTC sites/ads. Entertainment + education.",
+            "body": 'Look at bad DTC websites/ads (without naming names) and break down what\'s wrong. Entertainment + education. Your "take your website to zero" reel was this — lean harder into it.',
+        },
+    ]
 
-    sections_html = "\n".join(section_html_parts)
+    format_items_html = []
+    for fs in FORMAT_SEGMENTS:
+        format_items_html.append(f'''    <article class="idea">
+      <details class="idea-details">
+        <summary class="idea-summary">
+          <span class="idea-title">{html.escape(fs["name"])}</span>
+          <svg class="chevron-sm" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+        </summary>
+        <div class="idea-content">
+          <p><em>{html.escape(fs["summary"])}</em></p>
+          <p>{html.escape(fs["body"])}</p>
+        </div>
+      </details>
+    </article>''')
+
+    format_section_html = f'''
+<details class="format-section">
+  <summary>
+    <span class="section-num">✦</span>
+    <span class="section-title">Format Segments</span>
+    <span class="section-count">{len(FORMAT_SEGMENTS)}</span>
+    <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+  </summary>
+  <div class="items">
+{chr(10).join(format_items_html)}
+  </div>
+</details>'''
+    sections_html = format_section_html + "\n" + "\n".join(section_html_parts)
 
     from datetime import datetime, timezone
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
