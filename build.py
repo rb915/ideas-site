@@ -425,6 +425,16 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     border-radius: 4px; cursor: pointer; margin-left: 8px; letter-spacing: 0.04em; }
   .dismiss-count { font-family: 'JetBrains Mono', monospace; font-size: 11px;
     color: var(--ink-muted); margin-left: auto; padding: 8px 0; }
+  .reorder-btns { display: flex; flex-direction: column; gap: 2px; margin-left: auto;
+    padding-right: 2px; flex-shrink: 0; }
+  .reorder-btn { background: none; border: 1px solid var(--rule); color: var(--ink-muted);
+    font-size: 10px; cursor: pointer; padding: 1px 5px; border-radius: 3px; line-height: 1.2;
+    opacity: 0; transition: opacity 0.15s ease, color 0.15s ease;
+    -webkit-tap-highlight-color: transparent; }
+  body > details > summary:hover .reorder-btn,
+  body > details > summary:active .reorder-btn { opacity: 1; }
+  .reorder-btn:hover { color: var(--accent); border-color: var(--accent); }
+  @media (hover: none) { .reorder-btn { opacity: 0.7; } }
   @media (max-width: 480px) {
     body { padding: 20px 14px 60px; }
     .items { padding-left: 10px; padding-right: 10px; }
@@ -561,6 +571,85 @@ __SECTIONS__
 
   // Apply dismissed state on page load
   applyDismissed();
+
+  // --- Section reorder logic (localStorage) ---
+  const ORDER_KEY = 'section_order';
+
+  function getSections() {
+    return [...document.querySelectorAll('body > details')];
+  }
+
+  function getSectionId(section) {
+    const title = section.querySelector('.section-title');
+    return title ? title.textContent.trim() : '';
+  }
+
+  function getSavedOrder() {
+    try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveOrder() {
+    const order = getSections().map(s => getSectionId(s));
+    localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+  }
+
+  function applySavedOrder() {
+    const saved = getSavedOrder();
+    if (!saved.length) return;
+    const sections = getSections();
+    const footer = document.querySelector('footer');
+    const byName = {};
+    sections.forEach(s => byName[getSectionId(s)] = s);
+    // Place saved sections in order first
+    saved.forEach(name => {
+      if (byName[name]) {
+        document.body.insertBefore(byName[name], footer);
+        delete byName[name];
+      }
+    });
+    // Append any new sections not in saved order
+    Object.values(byName).forEach(s => document.body.insertBefore(s, footer));
+  }
+
+  function moveSection(section, dir) {
+    const sections = getSections();
+    const idx = sections.indexOf(section);
+    if (dir === -1 && idx > 0) {
+      section.parentNode.insertBefore(section, sections[idx - 1]);
+    } else if (dir === 1 && idx < sections.length - 1) {
+      sections[idx + 1].after(section);
+    }
+    saveOrder();
+  }
+
+  function addReorderButtons() {
+    getSections().forEach(section => {
+      const summary = section.querySelector('summary');
+      if (!summary || summary.querySelector('.reorder-btns')) return;
+      const div = document.createElement('div');
+      div.className = 'reorder-btns';
+      const up = document.createElement('button');
+      up.className = 'reorder-btn';
+      up.textContent = '▲';
+      up.title = 'Move up';
+      up.onclick = (e) => { e.stopPropagation(); e.preventDefault(); moveSection(section, -1); };
+      const down = document.createElement('button');
+      down.className = 'reorder-btn';
+      down.textContent = '▼';
+      down.title = 'Move down';
+      down.onclick = (e) => { e.stopPropagation(); e.preventDefault(); moveSection(section, 1); };
+      div.appendChild(up);
+      div.appendChild(down);
+      // Insert before the chevron
+      const chevron = summary.querySelector('.chevron');
+      if (chevron) summary.insertBefore(div, chevron);
+      else summary.appendChild(div);
+    });
+  }
+
+  applySavedOrder();
+  addReorderButtons();
 </script>
 </body>
 </html>
