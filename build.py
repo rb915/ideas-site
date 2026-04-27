@@ -880,7 +880,7 @@ def main():
         origin_section_html = f'''
 <details class="format-section">
   <summary>
-    <span class="section-num">\u2726</span>
+    <span class="section-num">\U0001f455</span>
     <span class="section-title">Origin Stories</span>
     <span class="section-count">{len(origin_stories_rows)}</span>
     <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
