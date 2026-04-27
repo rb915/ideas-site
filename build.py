@@ -223,7 +223,6 @@ SECTIONS = [
     ("dropout_risk", "College, Risk & Mistakes"),
     ("team_ops", "Team, Culture & Operations"),
     ("origin", "Origin Stories & Backstory"),
-    ("other", "Other Ideas"),
 ]
 
 
@@ -644,7 +643,8 @@ def main():
         if is_origin_stories(r):
             continue
         key = categorize(r["title"], r["source"], r["content"])
-        grouped[key].append(r)
+        if key in grouped:
+            grouped[key].append(r)
 
     # ---- Build the regular themed section HTML ----
     section_html_parts = []
