@@ -835,7 +835,7 @@ def main():
         breaking_section_html = f'''
 <details class="breaking-section">
   <summary>
-    <span class="section-num">●</span>
+    <span class="section-num">🚨</span>
     <span class="section-title">Breaking News</span>
     <span class="section-count">{len(breaking_news_rows)}</span>
     <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
