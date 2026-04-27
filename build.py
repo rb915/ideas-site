@@ -642,7 +642,10 @@ def main():
     def is_5k_products(row):
         return "5k" in row["source"].strip().lower()
 
-    # Group by theme (skip Breaking News, Origin Stories, Whitespace, and 5K Products items — they get their own sections)
+    def is_roast(row):
+        return row["source"].strip().lower() == "roast"
+
+    # Group by theme (skip Breaking News, Origin Stories, Whitespace, 5K Products, and Roast items — they get their own sections)
     grouped = {key: [] for key, _ in SECTIONS}
     for r in rows:
         if is_breaking_news(r):
@@ -652,6 +655,8 @@ def main():
         if is_whitespace(r):
             continue
         if is_5k_products(r):
+            continue
+        if is_roast(r):
             continue
         key = categorize(r["title"], r["source"], r["content"])
         if key in grouped:
@@ -882,6 +887,51 @@ def main():
   </div>
 </details>'''
 
+    # ---- Build the Roast section HTML ----
+    roast_rows = [r for r in rows if is_roast(r)]
+    roast_section_html = ""
+    if roast_rows:
+        ro_items_html = []
+        for r in roast_rows:
+            idea_id = html.escape(r["id"])
+            title = html.escape(r["title"].strip())
+            slot = html.escape(r["slot"].strip())
+            source = html.escape(r["source"].strip())
+            created = html.escape(r["created"].strip())
+            content_html = render_content(r["content"])
+            meta_bits = []
+            if slot: meta_bits.append(f'<span class="tag tag-slot">{slot}</span>')
+            if source: meta_bits.append(f'<span class="tag tag-source">{source}</span>')
+            if created: meta_bits.append(f'<span class="tag tag-date">{created}</span>')
+            meta_html = ('<div class="item-meta">' + "".join(meta_bits) + "</div>") if meta_bits else ""
+            ro_items_html.append(f'''    <article class="idea" data-id="{idea_id}">
+      <details class="idea-details">
+        <summary class="idea-summary">
+          <span class="idea-title">{title}</span>
+          <button class="dismiss-btn" onclick="dismissIdea(event, '{idea_id}')" title="Dismiss idea">✕</button>
+          <svg class="chevron-sm" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+        </summary>
+        {meta_html}
+        <div class="idea-content">
+{content_html}
+        </div>
+      </details>
+    </article>''')
+
+        ro_items_joined = "\n".join(ro_items_html)
+        roast_section_html = f'''
+<details class="format-section">
+  <summary>
+    <span class="section-num">\U0001f525</span>
+    <span class="section-title">Roast</span>
+    <span class="section-count">{len(roast_rows)}</span>
+    <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+  </summary>
+  <div class="items">
+{ro_items_joined}
+  </div>
+</details>'''
+
     # ---- Build the Format Segments section HTML (static) ----
     FORMAT_SEGMENTS = [
         {
@@ -951,7 +1001,7 @@ def main():
 </details>'''
 
     # ---- Combine: Breaking News, Origin Stories, Whitespace Alerts, 5K Products, Format Segments, then themed sections ----
-    sections_html = breaking_section_html + "\n" + origin_section_html + "\n" + whitespace_section_html + "\n" + fivek_section_html + "\n" + format_section_html + "\n" + "\n".join(section_html_parts)
+    sections_html = breaking_section_html + "\n" + origin_section_html + "\n" + whitespace_section_html + "\n" + fivek_section_html + "\n" + roast_section_html + "\n" + format_section_html + "\n" + "\n".join(section_html_parts)
 
     from datetime import datetime, timezone
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
