@@ -385,7 +385,6 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     padding: 3px 7px; border-radius: 4px; letter-spacing: 0.04em;
     background: var(--bg-nested); color: var(--ink-soft); border: 1px solid var(--rule); }
   .tag-slot { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
-  .breaking-section { border-left: 4px solid var(--accent) !important; }
   .breaking-section > summary .section-num { color: var(--accent); font-size: 14px; }
   .format-section > summary .section-num { color: var(--accent); font-size: 14px; }
   .idea-content { padding: 4px 10px 20px 10px; font-size: 15px;
