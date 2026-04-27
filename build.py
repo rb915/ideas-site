@@ -392,6 +392,8 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     padding: 3px 7px; border-radius: 4px; letter-spacing: 0.04em;
     background: var(--bg-nested); color: var(--ink-soft); border: 1px solid var(--rule); }
   .tag-slot { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+  .breaking-section { border-left: 4px solid var(--accent) !important; }
+  .breaking-section > summary .section-num { color: var(--accent); font-size: 14px; }
   .idea-content { padding: 4px 10px 20px 10px; font-size: 15px;
     line-height: 1.6; color: var(--ink-soft); }
   .idea-content p { margin-bottom: 10px; }
@@ -521,9 +523,11 @@ def main():
             "created": created,
         })
 
-    # Group by theme
+    # Group by theme (skip Breaking News items so they only appear in their own section)
     grouped = {key: [] for key, _ in SECTIONS}
     for r in rows:
+        if is_breaking_news(r):
+            continue
         key = categorize(r["title"], r["source"], r["content"])
         grouped[key].append(r)
 
@@ -569,6 +573,64 @@ def main():
       </details>
     </article>''')
         section_html_parts.append("  </div>\n</details>")
+      # ---- Breaking News (sourced from Notion) ----
+    # An item lands in Breaking News if ANY of these are true:
+    #   1. Source is "Breaking News"
+    #   2. Source contains "openclaw" (case-insensitive — catches "OpenClaw", "RBopenclaw", etc.)
+    #   3. Title is mostly ALL CAPS (>= 70% of letters uppercase, min 5 letters)
+    def is_breaking_news(row):
+        src = row["source"].strip().lower()
+        if src == "breaking news":
+            return True
+        if "openclaw" in src:
+            return True
+        title = row["title"]
+        letters = [c for c in title if c.isalpha()]
+        if len(letters) >= 5:
+            upper_count = sum(1 for c in letters if c.isupper())
+            if (upper_count / len(letters)) >= 0.7:
+                return True
+        return False
+
+    breaking_news_rows = [r for r in rows if is_breaking_news(r)]
+
+    breaking_section_html = ""
+    if breaking_news_rows:
+        bn_items_html = []
+        for r in breaking_news_rows:
+            title = html.escape(r["title"].strip())
+            slot = html.escape(r["slot"].strip())
+            created = html.escape(r["created"].strip())
+            content_html = render_content(r["content"])
+            meta_bits = []
+            if slot: meta_bits.append(f'<span class="tag tag-slot">{slot}</span>')
+            if created: meta_bits.append(f'<span class="tag tag-date">{created}</span>')
+            meta_html = ('<div class="item-meta">' + "".join(meta_bits) + "</div>") if meta_bits else ""
+            bn_items_html.append(f'''    <article class="idea">
+      <details class="idea-details">
+        <summary class="idea-summary">
+          <span class="idea-title">{title}</span>
+          <svg class="chevron-sm" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+        </summary>
+        {meta_html}
+        <div class="idea-content">
+{content_html}
+        </div>
+      </details>
+    </article>''')
+
+        breaking_section_html = f'''
+<details class="breaking-section" open>
+  <summary>
+    <span class="section-num">●</span>
+    <span class="section-title">Breaking News</span>
+    <span class="section-count">{len(breaking_news_rows)}</span>
+    <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
+  </summary>
+  <div class="items">
+{chr(10).join(bn_items_html)}
+  </div>
+</details>'''
 # ---- Format Segments (static, hard-coded) ----
     FORMAT_SEGMENTS = [
         {
@@ -635,7 +697,7 @@ def main():
 {chr(10).join(format_items_html)}
   </div>
 </details>'''
-    sections_html = format_section_html + "\n" + "\n".join(section_html_parts)
+    sections_html = breaking_section_html + "\n" + format_section_html + "\n" + "\n".join(section_html_parts)
 
     from datetime import datetime, timezone
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
