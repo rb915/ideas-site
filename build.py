@@ -724,7 +724,7 @@ def main():
 
         bn_items_joined = "\n".join(bn_items_html)
         breaking_section_html = f'''
-<details class="breaking-section" open>
+<details class="breaking-section">
   <summary>
     <span class="section-num">●</span>
     <span class="section-title">Breaking News</span>
