@@ -529,7 +529,7 @@ def main():
     # Group by theme (skip Breaking News items so they only appear in their own section)
     grouped = {key: [] for key, _ in SECTIONS}
     for r in rows:
-        if is_breaking_news(r):
+        
             continue
         key = categorize(r["title"], r["source"], r["content"])
         grouped[key].append(r)
@@ -577,7 +577,7 @@ def main():
     </article>''')
         section_html_parts.append("  </div>\n</details>")
       
-    def is_breaking_news(row):
+    
         src = row["source"].strip().lower()
         if src == "breaking news":
             return True
@@ -591,7 +591,7 @@ def main():
                 return True
         return False
 
-    breaking_news_rows = [r for r in rows if is_breaking_news(r)]
+    breaking_news_rows = [r for r in rows if ]
 
     breaking_section_html = ""
     if breaking_news_rows:
