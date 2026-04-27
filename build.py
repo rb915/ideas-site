@@ -605,7 +605,7 @@ def main():
                 return True
         return False
 
-    breaking_news_rows = [r for r in rows if ]
+    is_breaking_news(r)
 
     breaking_section_html = ""
     if breaking_news_rows:
