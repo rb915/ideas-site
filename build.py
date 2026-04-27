@@ -377,7 +377,8 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     display: flex; align-items: flex-start; gap: 12px;
     -webkit-tap-highlight-color: transparent; user-select: none; }
   .idea-title { flex: 1; font-size: 15.5px; line-height: 1.35;
-    font-weight: 400; color: var(--ink); letter-spacing: -0.005em; }
+    font-weight: 400; color: var(--ink); letter-spacing: -0.005em;
+    word-wrap: break-word; overflow-wrap: break-word; min-width: 0; }
   .idea-details[open] .idea-title { color: var(--accent); font-weight: 500; }
   .item-meta { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 6px 10px; }
   .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px;
