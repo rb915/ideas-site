@@ -410,6 +410,21 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     font-family: 'JetBrains Mono', monospace; font-size: 11px;
     color: var(--ink-muted); text-align: center; letter-spacing: 0.05em; }
   .hidden { display: none !important; }
+  .dismissed { display: none !important; }
+  .show-dismissed .dismissed { display: block !important; opacity: 0.45; }
+  .show-dismissed .dismissed .idea-title { text-decoration: line-through; }
+  .dismiss-btn { background: none; border: none; color: var(--ink-muted); font-size: 14px;
+    cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
+    opacity: 0; transition: opacity 0.15s ease, color 0.15s ease;
+    -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+  .idea-summary:hover .dismiss-btn, .idea-summary:active .dismiss-btn { opacity: 1; }
+  .dismiss-btn:hover { color: var(--accent); }
+  @media (hover: none) { .dismiss-btn { opacity: 0.6; } }
+  .restore-btn { background: none; border: 1px solid var(--accent-soft); color: var(--accent);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 8px;
+    border-radius: 4px; cursor: pointer; margin-left: 8px; letter-spacing: 0.04em; }
+  .dismiss-count { font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-muted); margin-left: auto; padding: 8px 0; }
   @media (max-width: 480px) {
     body { padding: 20px 14px 60px; }
     .items { padding-left: 10px; padding-right: 10px; }
@@ -438,6 +453,8 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
   <input type="search" class="search" id="search" placeholder="Search ideas…" aria-label="Search ideas">
   <button onclick="toggleAll(true)">Expand all</button>
   <button onclick="toggleAll(false)">Collapse all</button>
+  <button id="toggle-dismissed" onclick="toggleDismissed()">Show dismissed</button>
+  <span class="dismiss-count" id="dismiss-count"></span>
 </div>
 
 __SECTIONS__
@@ -447,9 +464,84 @@ __SECTIONS__
 </footer>
 
 <script>
+  // --- Dismiss/restore logic (localStorage) ---
+  const STORAGE_KEY = 'dismissed_ideas';
+
+  function getDismissed() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveDismissed(ids) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  }
+
+  function dismissIdea(event, id) {
+    event.stopPropagation();
+    event.preventDefault();
+    const ids = getDismissed();
+    if (!ids.includes(id)) { ids.push(id); saveDismissed(ids); }
+    applyDismissed();
+  }
+
+  function restoreIdea(event, id) {
+    event.stopPropagation();
+    const ids = getDismissed().filter(x => x !== id);
+    saveDismissed(ids);
+    applyDismissed();
+  }
+
+  function applyDismissed() {
+    const ids = getDismissed();
+    // Mark dismissed ideas
+    document.querySelectorAll('.idea[data-id]').forEach(el => {
+      const id = el.dataset.id;
+      const isDismissed = ids.includes(id);
+      el.classList.toggle('dismissed', isDismissed);
+      // Add or remove restore button
+      let rb = el.querySelector('.restore-btn');
+      if (isDismissed && !rb) {
+        rb = document.createElement('button');
+        rb.className = 'restore-btn';
+        rb.textContent = 'Restore';
+        rb.onclick = (e) => restoreIdea(e, id);
+        el.querySelector('.idea-summary').appendChild(rb);
+      } else if (!isDismissed && rb) {
+        rb.remove();
+      }
+    });
+    // Update section counts (visible ideas only)
+    document.querySelectorAll('body > details').forEach(section => {
+      const allIdeas = section.querySelectorAll('.idea[data-id]');
+      const visible = [...allIdeas].filter(el => !el.classList.contains('dismissed'));
+      const countEl = section.querySelector('.section-count');
+      if (countEl && allIdeas.length > 0) {
+        countEl.textContent = visible.length;
+      }
+      // Hide empty sections (unless showing dismissed)
+      if (visible.length === 0 && !document.body.classList.contains('show-dismissed')) {
+        section.classList.add('hidden');
+      } else {
+        section.classList.remove('hidden');
+      }
+    });
+    // Update dismiss count badge
+    const countEl = document.getElementById('dismiss-count');
+    countEl.textContent = ids.length ? ids.length + ' dismissed' : '';
+  }
+
+  function toggleDismissed() {
+    document.body.classList.toggle('show-dismissed');
+    const btn = document.getElementById('toggle-dismissed');
+    btn.textContent = document.body.classList.contains('show-dismissed') ? 'Hide dismissed' : 'Show dismissed';
+    applyDismissed();
+  }
+
+  // --- Expand/collapse ---
   function toggleAll(open) {
     document.querySelectorAll('body > details').forEach(d => d.open = open);
   }
+
+  // --- Search ---
   const search = document.getElementById('search');
   search.addEventListener('input', e => {
     const q = e.target.value.trim().toLowerCase();
@@ -466,6 +558,9 @@ __SECTIONS__
       if (q && anyMatch) section.open = true;
     });
   });
+
+  // Apply dismissed state on page load
+  applyDismissed();
 </script>
 </body>
 </html>
@@ -484,6 +579,7 @@ def main():
     rows = []
     for i, page in enumerate(pages):
         props = page.get("properties", {})
+        page_id = page["id"]  # Notion page UUID — used as stable dismiss key
 
         # Title is whichever property has type=title
         title = ""
@@ -510,6 +606,7 @@ def main():
         content = body_md or content_prop
 
         rows.append({
+            "id": page_id,
             "title": title,
             "content": content,
             "slot": slot,
@@ -563,6 +660,7 @@ def main():
   <div class="items">''')
 
         for r in items:
+            idea_id = html.escape(r["id"])
             title = html.escape(r["title"].strip())
             slot = html.escape(r["slot"].strip())
             source = html.escape(r["source"].strip())
@@ -573,10 +671,11 @@ def main():
             if source: meta_bits.append(f'<span class="tag tag-source">{source}</span>')
             if created: meta_bits.append(f'<span class="tag tag-date">{created}</span>')
             meta_html = ('<div class="item-meta">' + "".join(meta_bits) + "</div>") if meta_bits else ""
-            section_html_parts.append(f'''    <article class="idea">
+            section_html_parts.append(f'''    <article class="idea" data-id="{idea_id}">
       <details class="idea-details">
         <summary class="idea-summary">
           <span class="idea-title">{title}</span>
+          <button class="dismiss-btn" onclick="dismissIdea(event, '{idea_id}')" title="Dismiss idea">✕</button>
           <svg class="chevron-sm" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
         </summary>
         {meta_html}
@@ -593,6 +692,7 @@ def main():
     if breaking_news_rows:
         bn_items_html = []
         for r in breaking_news_rows:
+            idea_id = html.escape(r["id"])
             title = html.escape(r["title"].strip())
             slot = html.escape(r["slot"].strip())
             source = html.escape(r["source"].strip())
@@ -603,10 +703,11 @@ def main():
             if source: meta_bits.append(f'<span class="tag tag-source">{source}</span>')
             if created: meta_bits.append(f'<span class="tag tag-date">{created}</span>')
             meta_html = ('<div class="item-meta">' + "".join(meta_bits) + "</div>") if meta_bits else ""
-            bn_items_html.append(f'''    <article class="idea">
+            bn_items_html.append(f'''    <article class="idea" data-id="{idea_id}">
       <details class="idea-details">
         <summary class="idea-summary">
           <span class="idea-title">{title}</span>
+          <button class="dismiss-btn" onclick="dismissIdea(event, '{idea_id}')" title="Dismiss idea">✕</button>
           <svg class="chevron-sm" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
         </summary>
         {meta_html}
