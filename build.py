@@ -532,7 +532,7 @@ def main():
         
             continue
     key = categorize(r["title"], r["source"], r["content"])
-        grouped[key].append(r)
+    grouped[key].append(r)
 
     # Build section HTML
     section_html_parts = []
