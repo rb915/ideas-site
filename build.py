@@ -306,13 +306,6 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Content Ideas</title>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#faf7f2">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Ideas">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -394,6 +387,7 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
   .tag-slot { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
   .breaking-section { border-left: 4px solid var(--accent) !important; }
   .breaking-section > summary .section-num { color: var(--accent); font-size: 14px; }
+  .format-section > summary .section-num { color: var(--accent); font-size: 14px; }
   .idea-content { padding: 4px 10px 20px 10px; font-size: 15px;
     line-height: 1.6; color: var(--ink-soft); }
   .idea-content p { margin-bottom: 10px; }
@@ -522,7 +516,8 @@ def main():
             "source": source,
             "created": created,
         })
-# ---- Breaking News (sourced from Notion) ----
+
+    # ---- Breaking News detection ----
     # An item lands in Breaking News if ANY of these are true:
     #   1. Source is "Breaking News"
     #   2. Source contains "openclaw" (case-insensitive — catches "OpenClaw", "RBopenclaw", etc.)
@@ -548,7 +543,8 @@ def main():
             continue
         key = categorize(r["title"], r["source"], r["content"])
         grouped[key].append(r)
-    # Build section HTML
+
+    # ---- Build the regular themed section HTML ----
     section_html_parts = []
     section_num = 0
     for key, name in SECTIONS:
@@ -590,33 +586,21 @@ def main():
       </details>
     </article>''')
         section_html_parts.append("  </div>\n</details>")
-      
-    
-        src = row["source"].strip().lower()
-        if src == "breaking news":
-            return True
-        if "openclaw" in src:
-            return True
-        title = row["title"]
-        letters = [c for c in title if c.isalpha()]
-        if len(letters) >= 5:
-            upper_count = sum(1 for c in letters if c.isupper())
-            if (upper_count / len(letters)) >= 0.7:
-                return True
-        return False
 
-    is_breaking_news(r)
-
+    # ---- Build the Breaking News section HTML ----
+    breaking_news_rows = [r for r in rows if is_breaking_news(r)]
     breaking_section_html = ""
     if breaking_news_rows:
         bn_items_html = []
         for r in breaking_news_rows:
             title = html.escape(r["title"].strip())
             slot = html.escape(r["slot"].strip())
+            source = html.escape(r["source"].strip())
             created = html.escape(r["created"].strip())
             content_html = render_content(r["content"])
             meta_bits = []
             if slot: meta_bits.append(f'<span class="tag tag-slot">{slot}</span>')
+            if source: meta_bits.append(f'<span class="tag tag-source">{source}</span>')
             if created: meta_bits.append(f'<span class="tag tag-date">{created}</span>')
             meta_html = ('<div class="item-meta">' + "".join(meta_bits) + "</div>") if meta_bits else ""
             bn_items_html.append(f'''    <article class="idea">
@@ -632,6 +616,7 @@ def main():
       </details>
     </article>''')
 
+        bn_items_joined = "\n".join(bn_items_html)
         breaking_section_html = f'''
 <details class="breaking-section" open>
   <summary>
@@ -641,10 +626,11 @@ def main():
     <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
   </summary>
   <div class="items">
-{chr(10).join(bn_items_html)}
+{bn_items_joined}
   </div>
 </details>'''
-# ---- Format Segments (static, hard-coded) ----
+
+    # ---- Build the Format Segments section HTML (static) ----
     FORMAT_SEGMENTS = [
         {
             "name": '"How we actually did it" reels',
@@ -658,8 +644,8 @@ def main():
         },
         {
             "name": "Behind the negotiation",
-            "summary": "Show the frameworks behind $40–50M/yr in savings.",
-            "body": 'You save $40–50M/yr negotiating. Show the frameworks. "Here\'s how I got our shipping costs cut 30%." This is curriculum preview content.',
+            "summary": "Show the frameworks behind $40\u201350M/yr in savings.",
+            "body": 'You save $40\u201350M/yr negotiating. Show the frameworks. "Here\'s how I got our shipping costs cut 30%." This is curriculum preview content.',
         },
         {
             "name": "Student zero content",
@@ -668,7 +654,7 @@ def main():
         },
         {
             "name": '"What I\'d do with $5K today" series',
-            "summary": "A step-by-step launch walkthrough — this IS the school funnel.",
+            "summary": "A step-by-step launch walkthrough \u2014 this IS the school funnel.",
             "body": "You started with $3K. Walk people through exactly how you'd launch a brand today step by step. Dropshipping first, validate on Amazon, then build the brand. This IS the school funnel.",
         },
         {
@@ -679,13 +665,13 @@ def main():
         {
             "name": "Roast format",
             "summary": "Break down bad DTC sites/ads. Entertainment + education.",
-            "body": 'Look at bad DTC websites/ads (without naming names) and break down what\'s wrong. Entertainment + education. Your "take your website to zero" reel was this — lean harder into it.',
+            "body": 'Look at bad DTC websites/ads (without naming names) and break down what\'s wrong. Entertainment + education. Your "take your website to zero" reel was this \u2014 lean harder into it.',
         },
     ]
 
-    format_items_html = []
+    fs_items_html = []
     for fs in FORMAT_SEGMENTS:
-        format_items_html.append(f'''    <article class="idea">
+        fs_items_html.append(f'''    <article class="idea">
       <details class="idea-details">
         <summary class="idea-summary">
           <span class="idea-title">{html.escape(fs["name"])}</span>
@@ -698,18 +684,21 @@ def main():
       </details>
     </article>''')
 
+    fs_items_joined = "\n".join(fs_items_html)
     format_section_html = f'''
 <details class="format-section">
   <summary>
-    <span class="section-num">✦</span>
+    <span class="section-num">\u2726</span>
     <span class="section-title">Format Segments</span>
     <span class="section-count">{len(FORMAT_SEGMENTS)}</span>
     <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2 L8 6 L4 10"/></svg>
   </summary>
   <div class="items">
-{chr(10).join(format_items_html)}
+{fs_items_joined}
   </div>
 </details>'''
+
+    # ---- Combine: Breaking News at top, then Format Segments, then themed sections ----
     sections_html = breaking_section_html + "\n" + format_section_html + "\n" + "\n".join(section_html_parts)
 
     from datetime import datetime, timezone
@@ -724,20 +713,19 @@ def main():
             .replace("__UPDATED__", updated)
             .replace("__SECTIONS__", sections_html))
 
+    # ---- Copy static assets (icons, manifest) into public/ ----
     out_dir = Path("public")
     out_dir.mkdir(exist_ok=True)
     import shutil
     for asset in ["icon-512.png", "icon-192.png", "apple-touch-icon.png",
                   "favicon-32.png", "manifest.json"]:
-        src = Path(asset)
-        if src.exists():
-            shutil.copy(src, out_dir / asset)
+        src_path = Path(asset)
+        if src_path.exists():
+            shutil.copy(src_path, out_dir / asset)
             print(f"  copied {asset}")
-        else:
-            print(f"  (skipped {asset} — not found)")
-    
+
     (out_dir / "index.html").write_text(page, encoding="utf-8")
-    print(f"\n✓ Wrote public/index.html — {total} ideas, {section_num} themes")
+    print(f"\n\u2713 Wrote public/index.html \u2014 {total} ideas, {section_num} themes, {len(breaking_news_rows)} breaking news")
 
 
 if __name__ == "__main__":
