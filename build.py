@@ -524,16 +524,30 @@ def main():
         })
 # ---- Breaking News (sourced from Notion) ----
     # An item lands in Breaking News if ANY of these are true:
-    #   1. Source is "OpenClaw Breaking News"
-   
+    #   1. Source is "Breaking News"
+    #   2. Source contains "openclaw" (case-insensitive — catches "OpenClaw", "RBopenclaw", etc.)
+    #   3. Title is mostly ALL CAPS (>= 70% of letters uppercase, min 5 letters)
+    def is_breaking_news(row):
+        src = row["source"].strip().lower()
+        if src == "breaking news":
+            return True
+        if "openclaw" in src:
+            return True
+        title = row["title"]
+        letters = [c for c in title if c.isalpha()]
+        if len(letters) >= 5:
+            upper_count = sum(1 for c in letters if c.isupper())
+            if (upper_count / len(letters)) >= 0.7:
+                return True
+        return False
+
     # Group by theme (skip Breaking News items so they only appear in their own section)
     grouped = {key: [] for key, _ in SECTIONS}
     for r in rows:
-        
+        if is_breaking_news(r):
             continue
         key = categorize(r["title"], r["source"], r["content"])
-    grouped[key].append(r)
-
+        grouped[key].append(r)
     # Build section HTML
     section_html_parts = []
     section_num = 0
