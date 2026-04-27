@@ -522,7 +522,10 @@ def main():
             "source": source,
             "created": created,
         })
-
+# ---- Breaking News (sourced from Notion) ----
+    # An item lands in Breaking News if ANY of these are true:
+    #   1. Source is "OpenClaw Breaking News"
+   
     # Group by theme (skip Breaking News items so they only appear in their own section)
     grouped = {key: [] for key, _ in SECTIONS}
     for r in rows:
@@ -573,11 +576,7 @@ def main():
       </details>
     </article>''')
         section_html_parts.append("  </div>\n</details>")
-      # ---- Breaking News (sourced from Notion) ----
-    # An item lands in Breaking News if ANY of these are true:
-    #   1. Source is "Breaking News"
-    #   2. Source contains "openclaw" (case-insensitive — catches "OpenClaw", "RBopenclaw", etc.)
-    #   3. Title is mostly ALL CAPS (>= 70% of letters uppercase, min 5 letters)
+      
     def is_breaking_news(row):
         src = row["source"].strip().lower()
         if src == "breaking news":
