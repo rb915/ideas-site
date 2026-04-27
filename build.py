@@ -531,7 +531,7 @@ def main():
     for r in rows:
         
             continue
-    key = categorize(r["title"], r["source"], r["content"])
+        key = categorize(r["title"], r["source"], r["content"])
     grouped[key].append(r)
 
     # Build section HTML
