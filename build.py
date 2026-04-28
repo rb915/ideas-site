@@ -449,13 +449,7 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
 <header>
   <div class="eyebrow">Content Library</div>
   <h1>Ideas, <em>organized</em>.</h1>
-  <p class="subtitle">Tap a topic to expand. Tap an idea to read the full content.</p>
-  <div class="meta">
-    <span>__TOTAL__ ideas</span>
-    <span>__WITH_CONTENT__ with content</span>
-    <span>__SECTION_COUNT__ themes</span>
-    <span>Updated __UPDATED__</span>
-  </div>
+
 </header>
 
 <div class="controls">
