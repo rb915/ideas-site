@@ -454,8 +454,8 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
 
 <div class="controls">
   <input type="search" class="search" id="search" placeholder="Search ideas…" aria-label="Search ideas">
-  <button onclick="toggleAll(true)">Expand all</button>
-  <button onclick="toggleAll(false)">Collapse all</button>
+  <button onclick="toggleAll(true)">Expand</button>
+  <button onclick="toggleAll(false)">Collapse</button>
 </div>
 
 __SECTIONS__
