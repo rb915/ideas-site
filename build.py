@@ -426,14 +426,14 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     color: var(--ink-muted); margin-left: auto; padding: 8px 0; }
   .reorder-btns { display: flex; flex-direction: column; gap: 2px; margin-left: auto;
     padding-right: 2px; flex-shrink: 0; }
-  .reorder-btn { background: none; border: 1px solid var(--rule); color: var(--ink-muted);
-    font-size: 10px; cursor: pointer; padding: 1px 5px; border-radius: 3px; line-height: 1.2;
+  .reorder-btn { background: none; border: none; color: var(--ink-muted);
+    font-size: 9px; cursor: pointer; padding: 2px 4px; border-radius: 3px; line-height: 1;
     opacity: 0; transition: opacity 0.15s ease, color 0.15s ease;
-    -webkit-tap-highlight-color: transparent; }
+    -webkit-tap-highlight-color: transparent; font-family: 'JetBrains Mono', monospace; }
   body > details > summary:hover .reorder-btn,
-  body > details > summary:active .reorder-btn { opacity: 1; }
-  .reorder-btn:hover { color: var(--accent); border-color: var(--accent); }
-  @media (hover: none) { .reorder-btn { opacity: 0.7; } }
+  body > details > summary:active .reorder-btn { opacity: 0.5; }
+  .reorder-btn:hover { color: var(--accent); opacity: 1 !important; }
+  @media (hover: none) { .reorder-btn { opacity: 0.4; } }
   @media (max-width: 480px) {
     body { padding: 20px 14px 60px; }
     .items { padding-left: 10px; padding-right: 10px; }
@@ -637,12 +637,12 @@ __SECTIONS__
       div.className = 'reorder-btns';
       const up = document.createElement('button');
       up.className = 'reorder-btn';
-      up.textContent = '▲';
+      up.textContent = '↑';
       up.title = 'Move up';
       up.onclick = (e) => { e.stopPropagation(); e.preventDefault(); moveSection(section, -1); };
       const down = document.createElement('button');
       down.className = 'reorder-btn';
-      down.textContent = '▼';
+      down.textContent = '↓';
       down.title = 'Move down';
       down.onclick = (e) => { e.stopPropagation(); e.preventDefault(); moveSection(section, 1); };
       div.appendChild(up);
