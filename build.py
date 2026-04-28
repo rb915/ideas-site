@@ -337,7 +337,7 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
   .meta span::before { content: "— "; }
   .meta span:first-child::before { content: ""; }
   .controls { display: flex; gap: 8px; margin-bottom: 20px;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-wrap: wrap; }
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-wrap: nowrap; align-items: center; }
   .controls button { background: transparent; border: 1px solid var(--rule-strong);
     color: var(--ink-soft); padding: 8px 14px; border-radius: 6px; cursor: pointer;
     letter-spacing: 0.08em; text-transform: uppercase; font-family: inherit;
@@ -456,8 +456,6 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
   <input type="search" class="search" id="search" placeholder="Search ideas…" aria-label="Search ideas">
   <button onclick="toggleAll(true)">Expand all</button>
   <button onclick="toggleAll(false)">Collapse all</button>
-  <button id="toggle-dismissed" onclick="toggleDismissed()">Show dismissed</button>
-  <span class="dismiss-count" id="dismiss-count"></span>
 </div>
 
 __SECTIONS__
