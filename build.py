@@ -461,7 +461,7 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
 __SECTIONS__
 
 <footer>
-  END OF LIBRARY · __TOTAL__ IDEAS
+  JUST POST
 </footer>
 
 <script>
