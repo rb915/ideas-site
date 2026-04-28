@@ -540,13 +540,13 @@ __SECTIONS__
     });
     // Update dismiss count badge
     const countEl = document.getElementById('dismiss-count');
-    countEl.textContent = ids.length ? ids.length + ' dismissed' : '';
+    if (countEl) countEl.textContent = ids.length ? ids.length + ' dismissed' : '';
   }
 
   function toggleDismissed() {
     document.body.classList.toggle('show-dismissed');
     const btn = document.getElementById('toggle-dismissed');
-    btn.textContent = document.body.classList.contains('show-dismissed') ? 'Hide dismissed' : 'Show dismissed';
+    if (btn) btn.textContent = document.body.classList.contains('show-dismissed') ? 'Hide dismissed' : 'Show dismissed';
     applyDismissed();
   }
 
