@@ -1,0 +1,6 @@
+name = "notion-dismiss"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+NOTION_DB_ID = "348043efd9cb8015be1be5c33a3879d7"

@@ -473,8 +473,9 @@ __SECTIONS__
 </footer>
 
 <script>
-  // --- Dismiss/restore logic (localStorage) ---
+  // --- Dismiss/restore logic (localStorage + Notion archive) ---
   const STORAGE_KEY = 'dismissed_ideas';
+  const WORKER_URL = 'https://notion-dismiss.rb-801.workers.dev';
 
   function getDismissed() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -490,6 +491,12 @@ __SECTIONS__
     const ids = getDismissed();
     if (!ids.includes(id)) { ids.push(id); saveDismissed(ids); }
     applyDismissed();
+    // Archive in Notion so it's gone on next rebuild
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page_id: id, action: 'archive' }),
+    }).catch(() => {});
   }
 
   function restoreIdea(event, id) {
@@ -497,6 +504,12 @@ __SECTIONS__
     const ids = getDismissed().filter(x => x !== id);
     saveDismissed(ids);
     applyDismissed();
+    // Restore in Notion
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page_id: id, action: 'restore' }),
+    }).catch(() => {});
   }
 
   function applyDismissed() {
